@@ -180,7 +180,7 @@ $$k=p\lfloor\frac{n}{p}\rfloor+(n\bmod p)$$
 
 于是定理得证。$\square$
 
-#### exLucas 定理
+#### exLucas
 
 如果模数 $m$ 不是质数怎么办？
 
