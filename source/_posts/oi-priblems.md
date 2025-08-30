@@ -8,13 +8,90 @@ archive: true
 
 我要写代码，我要贴代码。
 
+## CNOI
+
+### 联合省选
+
+#### 2025
+
+追忆
+
+给的是有向图，有向图可达性是 NP 的，只能使用 bitset 做，这样分析复杂度可以除一个 $\omega$。
+
+对于 a 或 b 没有修改的情况我们都有 poly n 的做法，拼起来的时候考虑分块平衡复杂度。对 a 和 b 分别值域分块，整块维护编号集合的 bitset，散块直接维护对应编号，对于查询，假设可达点集为 S，那么找到 a 值域在 [l,r] 中的集合和 S 与起来，然后在 b 的值域中找到最后一个与 S 有交的块，在块中暴力就可以。
+
+计算复杂度，设块长为 B，分析可得 $B=\frac{n}{\omega^{1/2}}$ 时有最优时间复杂度 $O(\frac{n^2}{\omega^{1/2}})$。
+
+抄了个手写 bitset，$\omega=64$ 如下。
+
+```cpp
+constexpr int SIZ = 1570;
+struct my_bitset
+{
+ u64 a[SIZ];
+ inline void reset() { mem(a, 0); }
+ inline void set(int x) { a[x >> 6] |= 1ull << (x & 63); }
+ inline void flip(int x) { a[x >> 6] ^= 1ull << (x & 63); }
+ inline void operator&=(const my_bitset &b) { fo(i, 0, SIZ - 1) a[i] &= b.a[i]; }
+ inline void operator|=(const my_bitset &b) { fo(i, 0, SIZ - 1) a[i] |= b.a[i]; }
+ inline void operator^=(const my_bitset &b) { fo(i, 0, SIZ - 1) a[i] ^= b.a[i]; }
+ inline int val(int x) { return a[x >> 6] >> (x & 63) & 1; }
+ inline bool not_empty() { fo(i, 0, SIZ - 1) if (a[i]) return true; return false; }
+};
+```
+
+发现这并不好用，所以我这道题改用普通 bitset。
+
+```cpp
+const int N=1e5+5;
+int n,m,q,a[N],b[N],ia[N],ib[N],st[2005],ed[2005],cnt,pos[N],B,ind[N];
+vector<int> g[N];
+bitset<N> G[N],va[2005],vb[2005],S;
+inline void solve()
+{
+ read(n,m,q);B=max(1,n/8);cnt=n/B;if(n%B!=0)++cnt;
+ fo(i,1,n){g[i].clear();ind[i]=0;G[i].reset();G[i][i]=1;}
+ while(m--){int u,v;read(u,v);g[v].pb(u);ind[u]++;}
+ fo(i,1,n)read(a[i]),ia[a[i]]=i;fo(i,1,n)read(b[i]),ib[b[i]]=i;
+ fo(i,1,cnt){st[i]=ed[i-1]+1,ed[i]=min(n,st[i]+B-1);va[i]=0,vb[i]=0;fo(j,st[i],ed[i])pos[j]=i,va[i][ia[j]]=1,vb[i][ib[j]]=1;}
+ auto topo=[&]()->void
+ {
+  queue<int>q;fo(i,1,n)if(!ind[i])q.push(i);
+  while(!q.empty()){int u=q.front();q.pop();for(int v:g[u]){ind[v]--,G[v]|=G[u];if(!ind[v])q.push(v);}}
+ };
+ topo();int op,x,y,z;
+ while(q--)
+ {
+  read(op,x,y);
+  if(op==1){va[pos[a[x]]][x]=0,va[pos[a[y]]][y]=0;swap(a[x],a[y]);ia[a[x]]=x,ia[a[y]]=y;va[pos[a[x]]][x]=1,va[pos[a[y]]][y]=1;}
+  else if(op==2){vb[pos[b[x]]][x]=0,vb[pos[b[y]]][y]=0;swap(b[x],b[y]);ib[b[x]]=x,ib[b[y]]=y;vb[pos[b[x]]][x]=1,vb[pos[b[y]]][y]=1;}
+  else
+  {
+   auto update=[&](int l,int r)->void
+   {
+    bitset<N> s;s.reset();
+    if(pos[l]==pos[r])fo(i,l,r)s[ia[i]]=1;
+    else{fo(i,l,ed[pos[l]])s[ia[i]]=1;fo(i,pos[l]+1,pos[r]-1)s|=va[i];fo(i,st[pos[r]],r)s[ia[i]]=1;}
+    S&=s;
+   };
+   auto calc=[&]()->int
+   {
+    int now;for(now=cnt;now>=1;--now)if((S&vb[now]).count())break;
+    Fo(i,ed[now],st[now])if(S[ib[i]]==1)return i;return 0;
+   };
+   read(z);S=G[x];update(y,z);wr(calc()),pn;
+  }
+ }
+}
+```
+
 ## POI
 
 可以从 [szkopul](https://szkopul.edu.pl/) 上找，qoj 也很全但是没有 spj，更推荐直接从洛谷上搜。
 
 ### 2001
 
-#### 绿色游戏
+绿色游戏
 
 对于 Ann 的点，如果能称为必胜点那么其出边中存在一个绿点；对于 Bily 的点，如果能成为必胜点则其后继点必然全部是绿点；绿点不一定是必胜点。我们不妨假设绿点都是必胜点，从绿点开始跑来 check 上面的条件，如果有绿点不符合那就把这些绿点扔了继续跑，可以说明最多跑 $a+b$ 遍，对于本题是可以接受的。实现的时候可以从后继点到当前点连边，每次 check 可以执行一个类似 bfs 的框架。代码：
 
@@ -76,7 +153,7 @@ signed main()
 
 ### 2004
 
-#### Bra
+Bra
 
 神秘。考虑一个点点值的范围，两端不同就是未知了。贪心地假设每个点点权都是 1 然后如果有点不满足约束就把它改合法这样就能求上界，求下界同理。
 
@@ -148,11 +225,13 @@ signed main()
 
 ### 2005
 
-#### PUN-Points
+PUN-Points
 
 把重心平移到一块，最远点放缩到一起向两个方向判断就行。困了写不动了。不行得写。现在先不写，实在困。
 
-#### SAM-Toy Cars
+---
+
+SAM-Toy Cars
 
 直接猜每一次撤销 $nxt$ 最大的那一个。
 
@@ -188,7 +267,9 @@ signed main()
 }
 ```
 
-#### SKO-Knights
+---
+
+SKO-Knights
 
 记 $\operatorname{span}(S)$ 表示 $S$ 内集合 **整系数**线性组合得到的线性空间（张成），即
 
